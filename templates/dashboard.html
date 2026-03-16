@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="glass-card" style="max-width: 1100px; margin: 0 auto;">
+    
+    <div style="text-align: center; margin-bottom: 20px;">
+        <h2 style="color: var(--text-main); margin-bottom: 5px;">Summarize Content</h2>
+        <p style="color: var(--text-sub);">Upload a file or paste text below</p>
+    </div>
+
+    <div class="info-box">
+        <div class="badge-offline">⚡ Local AI Engine</div>
+        <ul class="limit-list">
+            <li><strong>Extractive Only</strong> (No rewriting)</li>
+            <li><strong>Text Based</strong> (No Scanned)</li>
+            <li><strong>Max ~100 Pages</strong></li>
+        </ul>
+    </div>
+
+    <div style="text-align: center; margin-bottom: 25px; font-size: 0.9rem; color: var(--text-sub); background: rgba(245, 158, 11, 0.05); border: 1px solid #f59e0b; border-radius: 10px; padding: 12px;">
+        ⚠️ <strong>Note:</strong> If your document has more pages, please use the <a href="{{ url_for('split_pdf_tool') }}" style="color: #d97706; font-weight: bold; text-decoration: underline;">Split PDF</a> tool to split it, then upload the parts.
+    </div>
+
+    <div id="loading-message" style="display: none; text-align: center; margin-bottom: 25px; padding: 15px; background: rgba(37, 99, 235, 0.1); color: var(--primary); border: 1px solid var(--primary); border-radius: 10px; animation: fadeIn 0.5s;">
+        <strong style="font-size: 1.1rem;">⏳ Generating Summary...</strong><br>
+        <span style="font-size: 0.9rem; color: var(--text-main);">Please wait while our AI analyzes your document. This may take a few seconds.</span>
+    </div>
+    
+    <form action="/dashboard" method="POST" enctype="multipart/form-data" onsubmit="showLoading()">
+        
+        <div style="display: grid; grid-template-columns: 1fr 1px 1fr; gap: 30px; margin-bottom: 30px; align-items: stretch;">
+            
+            <div style="display: flex; flex-direction: column;">
+                <label style="font-weight: bold; color: var(--text-main); display: block; margin-bottom: 10px;">Option 1: Upload File</label>
+                <div style="border: 2px dashed var(--card-border); background: var(--input-bg); padding: 30px; border-radius: 15px; text-align: center; transition: 0.3s; cursor: pointer; flex: 1; display: flex; flex-direction: column; justify-content: center;" onclick="document.getElementById('fileInput').click()" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--card-border)'">
+                    <input type="file" id="fileInput" name="file" style="display: none;" onchange="updateFileName(this)">
+                    <p style="color: var(--primary); font-weight: bold; margin: 0; font-size: 1.2rem;">📂 Click to Browse</p>
+                    <p id="file-name-display" style="color: var(--text-sub); margin-top: 5px; font-size: 0.9rem;">PDF, DOCX, PPTX, TXT</p>
+                </div>
+            </div>
+
+            <div style="background: var(--card-border); width: 1px;"></div>
+
+            <div style="display: flex; flex-direction: column; height: 100%;">
+                <label style="font-weight: bold; color: var(--text-main); display: block; margin-bottom: 10px;">Option 2: Paste Text</label>
+                <textarea name="raw_text" placeholder="Paste content here..." style="flex: 1; min-height: 250px; resize: none; background: var(--input-bg); color: var(--text-main); border: 1px solid var(--card-border); border-radius: 10px; padding: 15px;"></textarea>
+            </div>
+        </div>
+
+        <div style="background: rgba(0,0,0,0.02); padding: 20px; border-radius: 15px; display: flex; gap: 20px; flex-wrap: wrap; border: 1px solid var(--card-border);">
+            <div style="flex: 1;">
+                <label style="font-size: 0.9rem; font-weight: bold; color: var(--text-main);">Length</label>
+                <select name="length" class="adaptive-select">
+                    <option value="short">Short</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="long">Long</option>
+                </select>
+            </div>
+            <div style="flex: 1;">
+                <label style="font-size: 0.9rem; font-weight: bold; color: var(--text-main);">Format</label>
+                <select name="style" class="adaptive-select">
+                    <option value="paragraph">Paragraphs</option>
+                    <option value="bullets">Bullets</option>
+                </select>
+            </div>
+            <div style="flex: 1;">
+                <label style="font-size: 0.9rem; font-weight: bold; color: var(--text-main);">Language</label>
+                <select name="language" class="adaptive-select">
+                    <option value="en">English</option>
+                    <option value="ta">Tamil</option>
+                    <option value="hi">Hindi</option>
+                </select>
+            </div>
+        </div>
+
+        <button type="submit" id="submit-btn" class="btn-gradient" style="width: 100%; margin-top: 25px; font-size: 1.1rem; padding: 15px;">Generate Summary ✨</button>
+    </form>
+</div>
+
+<script>
+    function updateFileName(input) {
+        if (input.files && input.files.length > 0) {
+            document.getElementById('file-name-display').textContent = "Selected: " + input.files[0].name;
+            document.getElementById('file-name-display').style.color = "var(--success)";
+            document.getElementById('file-name-display').style.fontWeight = "bold";
+        }
+    }
+
+    function showLoading() {
+        document.getElementById('loading-message').style.display = 'block';
+        let btn = document.getElementById('submit-btn');
+        btn.innerText = 'Processing...';
+        btn.style.opacity = '0.7';
+        btn.style.cursor = 'wait';
+    }
+</script>
+
+<style>
+    /* Info & Limitations Box */
+    .info-box {
+        background: var(--input-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
+        padding: 15px 20px;
+        margin-bottom: 20px;
+        font-size: 0.9rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .badge-offline {
+        background: rgba(16, 185, 129, 0.15);
+        color: #10b981;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-weight: 700;
+        font-size: 0.85rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .limit-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        display: flex;
+        gap: 20px;
+        color: var(--text-sub);
+        font-size: 0.85rem;
+        flex-wrap: wrap;
+    }
+    .limit-list li { display: flex; align-items: center; gap: 6px; }
+    .limit-list li::before { content: "•"; color: var(--text-sub); }
+
+    /* --- ADAPTIVE DROPDOWN STYLES --- */
+    .adaptive-select {
+        /* Use variables for the main input box */
+        background-color: var(--input-bg);
+        color: var(--text-main);
+        border: 1px solid var(--card-border);
+        
+        /* Layout */
+        width: 100%;
+        padding: 8px;
+        border-radius: 8px;
+
+        /* This property forces the browser to render the popup menu 
+           according to the system/browser theme preferences */
+        color-scheme: light dark;
+    }
+
+    /* Ensure options also inherit the variable colors explicitly */
+    .adaptive-select option {
+        background-color: var(--input-bg);
+        color: var(--text-main);
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}

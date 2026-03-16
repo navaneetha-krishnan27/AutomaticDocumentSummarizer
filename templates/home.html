@@ -1,0 +1,357 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* --- HERO SECTION --- */
+    .hero {
+        text-align: center;
+        padding: 80px 20px 40px;
+        max-width: 900px;
+        margin: 0 auto;
+        position: relative;
+    }
+    .hero h1 {
+        font-size: 3.5rem;
+        line-height: 1.2;
+        margin-bottom: 20px;
+        color: var(--text-main);
+        font-weight: 800;
+    }
+    .hero span {
+        background: var(--gradient);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+        font-size: 1.25rem;
+        color: var(--text-sub);
+        margin-bottom: 40px;
+        line-height: 1.6;
+    }
+
+    /* Ambient Orbs */
+    .orb {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(80px);
+        z-index: -1;
+        opacity: 0.5;
+        animation: float 10s infinite alternate;
+    }
+    .orb-1 { width: 300px; height: 300px; background: rgba(37, 99, 235, 0.4); top: -50px; left: -100px; }
+    .orb-2 { width: 250px; height: 250px; background: rgba(124, 58, 237, 0.4); bottom: 0; right: -100px; animation-delay: -5s; }
+    
+    @keyframes float { 0% { transform: translate(0, 0); } 100% { transform: translate(30px, 50px); } }
+
+    /* --- SECTION STYLES --- */
+    .section-header {
+        text-align: center;
+        margin: 100px 0 60px;
+    }
+    .section-header h2 {
+        font-size: 2.2rem;
+        color: var(--text-main);
+        margin-bottom: 15px;
+    }
+    .section-header p {
+        color: var(--text-sub);
+        font-size: 1.1rem;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    /* --- UNIFIED GRID SYSTEM --- */
+    .grid-3-col {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr); 
+        column-gap: 40px; 
+        row-gap: 150px;   
+        margin-bottom: 60px;
+        align-items: stretch;
+    }
+
+    /* Responsive: Switch to 2 columns on tablets, 1 on mobile */
+    @media (max-width: 1024px) {
+        .grid-3-col { 
+            grid-template-columns: repeat(2, 1fr); 
+            row-gap: 80px; 
+        }
+    }
+    @media (max-width: 640px) {
+        .grid-3-col { 
+            grid-template-columns: 1fr; 
+            row-gap: 50px;
+        }
+    }
+
+    /* --- CARD DESIGN --- */
+    .glass-card {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 20px;
+        padding: 35px;
+        position: relative;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: var(--shadow);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+    }
+
+    .glass-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15);
+        border-color: var(--primary);
+    }
+
+    /* --- ICON & BLUE GLOW --- */
+    .icon-box {
+        font-size: 32px;
+        width: 70px;
+        height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 18px;
+        margin-bottom: 20px;
+        transition: all 0.4s ease;
+        
+        /* Default State */
+        background: var(--input-bg);
+        border: 1px solid var(--card-border);
+        color: var(--primary);
+    }
+
+    /* Hover State: BLUE GLOW */
+    .glass-card:hover .icon-box {
+        transform: scale(1.1) rotate(-5deg);
+        color: white;
+        background: var(--primary); 
+        box-shadow: 0 0 25px rgba(37, 99, 235, 0.6); 
+        border-color: transparent;
+    }
+
+    .glass-card h3 {
+        margin: 0 0 15px 0;
+        color: var(--text-main);
+        font-size: 1.3rem;
+        font-weight: 700;
+    }
+    
+    .glass-card p {
+        color: var(--text-sub);
+        font-size: 0.95rem;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .arrow-hint {
+        position: absolute;
+        top: 35px;
+        right: 35px;
+        font-size: 1.2rem;
+        opacity: 0;
+        transform: translateX(-10px);
+        transition: all 0.3s ease;
+        color: var(--text-sub);
+    }
+    .glass-card:hover .arrow-hint { opacity: 1; transform: translateX(0); color: var(--primary); }
+
+    /* --- PRO TIP CARD STYLES --- */
+    .pro-tip-card {
+        background: var(--card-bg);
+        border: 2px solid var(--card-border);
+        border-radius: 24px;
+        padding: 30px 40px;          /* Adjusted Padding */
+        max-width: 1100px;           /* Increased Width */
+        margin: 100px auto 60px;     /* Spacing */
+        text-align: center;
+        box-shadow: var(--shadow);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        overflow: hidden;
+        
+        /* Flex Layout for Single Line */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+    }
+
+    /* Gradient Accent on Top */
+    .pro-tip-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 5px;
+        background: var(--gradient);
+        opacity: 0.5;
+        transition: opacity 0.3s;
+    }
+
+    .pro-tip-card:hover {
+        transform: translateY(-5px) scale(1.01);
+        box-shadow: 0 25px 50px -12px rgba(37, 99, 235, 0.25);
+        border-color: var(--primary);
+    }
+
+    .pro-tip-card:hover::before { opacity: 1; }
+
+    .tip-icon {
+        font-size: 1.5rem; /* Small Emoji */
+        display: inline-block;
+        margin: 0;
+    }
+
+    .tip-text {
+        font-size: 1.1rem;
+        color: var(--text-sub);
+        line-height: 1.5;
+        white-space: nowrap; /* Force one line */
+    }
+    
+    /* Responsive: Wrap on smaller screens */
+    @media (max-width: 768px) {
+        .pro-tip-card { flex-direction: column; gap: 10px; }
+        .tip-text { white-space: normal; }
+    }
+
+    .key-highlight {
+        color: var(--text-main);
+        background: var(--input-bg);
+        border: 1px solid var(--card-border);
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-weight: bold;
+        display: inline-block;
+        margin: 0 4px;
+    }
+</style>
+
+<section class="hero">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <h1>Stop reading boring docs.<br>Start <span>understanding</span>.</h1>
+    <p>
+        Upload PDFs, PPTs, or Word docs and get instant, intelligent summaries powered by advanced AI.
+        Now featuring powerful PDF manipulation tools.
+    </p>
+    {% if not current_user.is_authenticated %}
+        <a href="{{ url_for('signup') }}" class="btn-gradient" style="padding: 15px 40px; font-size: 1.1rem;">Get Started Free &rarr;</a>
+    {% else %}
+        <a href="{{ url_for('dashboard') }}" class="btn-gradient" style="padding: 15px 40px; font-size: 1.1rem;">Go to Dashboard &rarr;</a>
+    {% endif %}
+</section>
+
+<div class="section-header">
+    <h2>🛠️ Essential PDF Tools</h2>
+    <p>Prepare your documents with our new utilities.</p>
+</div>
+
+<div class="grid-3-col">
+    <a href="{{ url_for('split_pdf_tool') }}" style="text-decoration: none; color: inherit;">
+        <div class="glass-card">
+            <div class="icon-box">✂️</div>
+            <h3>Split PDF</h3>
+            <p>Extract specific pages or split large documents into separate files instantly.</p>
+            <div class="arrow-hint">→</div>
+        </div>
+    </a>
+
+    <a href="{{ url_for('merge_pdf_tool') }}" style="text-decoration: none; color: inherit;">
+        <div class="glass-card">
+            <div class="icon-box">🔗</div>
+            <h3>Merge PDF</h3>
+            <p>Combine multiple PDF files into one single organized document.</p>
+            <div class="arrow-hint">→</div>
+        </div>
+    </a>
+
+    <a href="{{ url_for('img_to_pdf_tool') }}" style="text-decoration: none; color: inherit;">
+        <div class="glass-card">
+            <div class="icon-box">🖼️</div>
+            <h3>JPG to PDF</h3>
+            <p>Turn your photos or screenshots into a professional PDF document.</p>
+            <div class="arrow-hint">→</div>
+        </div>
+    </a>
+</div>
+
+<div class="section-header">
+    <h2>👥 Who is this for?</h2>
+    <p>Tailored experiences for every type of reader.</p>
+</div>
+
+<div class="grid-3-col">
+    <div class="glass-card">
+        <div class="icon-box">🎓</div>
+        <h3>For Students</h3>
+        <p>Turn 100-page textbooks into concise study guides. Focus on what matters for exams.</p>
+    </div>
+    
+    <div class="glass-card">
+        <div class="icon-box">💼</div>
+        <h3>For Professionals</h3>
+        <p>Get executive summaries of financial reports, meeting minutes, and project proposals.</p>
+    </div>
+
+    <div class="glass-card">
+        <div class="icon-box">🔬</div>
+        <h3>Scientific Research</h3>
+        <p>Analyze complex technical papers. Our AI identifies methodology, results, and conclusions.</p>
+    </div>
+
+    <div class="glass-card">
+        <div class="icon-box">⚖️</div>
+        <h3>Legal & Compliance</h3>
+        <p>Break down dense legal contracts into plain English. Spot critical clauses instantly.</p>
+    </div>
+
+    <div class="glass-card">
+        <div class="icon-box">✍️</div>
+        <h3>Content Creators</h3>
+        <p>Repurpose old blog posts or research papers into punchy social media captions.</p>
+    </div>
+
+    <div class="glass-card">
+        <div class="icon-box">💻</div>
+        <h3>Technical Docs</h3>
+        <p>Paste raw API specs to get a "TL;DR" on implementation details and logic.</p>
+    </div>
+</div>
+
+<div class="section-header">
+    <h2>🚀 Why Choose Our AI?</h2>
+    <p>Under the hood of our advanced summarization engine.</p>
+</div>
+
+<div class="grid-3-col">
+    <div class="glass-card">
+        <div class="icon-box">🧠</div>
+        <h3>Advanced NLP</h3>
+        <p>We use state-of-the-art Natural Language Processing (LSA & LexRank) to understand context, not just count words.</p>
+    </div>
+
+    <div class="glass-card">
+        <div class="icon-box">💬</div>
+        <h3>Chat with Data</h3>
+        <p>Don't just read the summary. Ask questions! Our "Chat with Document" feature lets you interrogate your file.</p>
+    </div>
+
+    <div class="glass-card">
+        <div class="icon-box">📂</div>
+        <h3>Multi-Format Support</h3>
+        <p>Whether it’s a PDF, a Word document (DOCX), a PowerPoint presentation (PPTX), or a plain text file, our engine handles it all with ease.</p>
+    </div>
+</div>
+
+<div class="pro-tip-card">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text">
+        <strong>Pro Tip:</strong> Use <span class="key-highlight">➕ / ➖</span> for text size and <span class="key-highlight">☀️ / 🌙</span> for dark mode.
+    </span>
+</div>
+
+<div style="height: 60px;"></div>
+{% endblock %}

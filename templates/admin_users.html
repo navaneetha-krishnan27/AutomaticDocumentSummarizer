@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    /* Modal Styles */
+    .modal-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5); z-index: 3000;
+        display: none; align-items: center; justify-content: center;
+        backdrop-filter: blur(5px);
+    }
+    .modal-box {
+        background: var(--card-bg); width: 90%; max-width: 500px;
+        padding: 30px; border-radius: 15px; box-shadow: var(--shadow-hover);
+        border: 1px solid var(--card-border);
+        animation: popIn 0.3s ease;
+    }
+    
+    /* Role Badges */
+    .role-badge {
+        padding: 4px 10px; border-radius: 12px; font-size: 0.85rem; font-weight: bold;
+        text-transform: capitalize;
+    }
+    .role-admin {
+        background: rgba(37,99,235,0.1);
+        color: var(--primary);
+        border: 1px solid rgba(37,99,235,0.2);
+    }
+    .role-user {
+        background: rgba(0,0,0,0.05);
+        color: var(--text-sub);
+        border: 1px solid var(--card-border);
+    }
+
+    @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+</style>
+
+<div class="glass-card" style="max-width: 1100px; margin: 0 auto;">
+    <h2>👥 User Management</h2>
+    <a href="{{ url_for('admin_dashboard') }}" style="color:var(--primary); text-decoration:none; margin-bottom: 20px; display:inline-block;">← Back to Dashboard</a>
+    
+    <table class="admin-table" style="width:100%; border-collapse:collapse;">
+        <thead>
+            <tr style="background:rgba(0,0,0,0.05); text-align:left;">
+                <th style="padding:15px;">User Details</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr style="border-bottom:1px solid var(--card-border);">
+                <td style="padding:15px;">
+                    <div style="font-weight:bold; font-size:1.05rem;">{{ user.username }}</div>
+                    <div style="font-size:0.9rem; color:var(--text-sub);">{{ user.email }}</div>
+                    <div style="font-size:0.8rem; color:var(--text-sub);">ID: {{ user.id }}</div>
+                </td>
+                <td>
+                    <span class="role-badge {{ 'role-admin' if user.role == 'admin' else 'role-user' }}">
+                        {{ user.role }}
+                    </span>
+                </td>
+                <td>
+                    {% if user.is_blocked %}
+                        <span style="color:var(--danger); font-weight:bold;">Blocked</span>
+                    {% else %}
+                        <span style="color:var(--success); font-weight:bold;">Active</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="icon-btn" onclick="openEditModal('{{ user.id }}', '{{ user.username }}', '{{ user.email }}')" title="Edit User">
+                            ✏️
+                        </button>
+
+                        <form method="POST" style="display:inline;">
+                            <input type="hidden" name="user_id" value="{{ user.id }}">
+                            
+                            {% if user.is_blocked %}
+                                <button name="action" value="unblock" class="icon-btn" title="Unblock User">🔓</button>
+                            {% else %}
+                                <button name="action" value="block" class="icon-btn" title="Block User" style="color:orange;">🚫</button>
+                            {% endif %}
+                            
+                            {% if user.role != 'admin' %}
+                                <button name="action" value="make_admin" class="icon-btn" title="Promote to Admin">⭐</button>
+                            {% endif %}
+                            
+                            <button name="action" value="delete" class="icon-btn" title="Delete User" style="color:red;" onclick="return confirm('Permanently delete this user?')">🗑️</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div id="editModal" class="modal-overlay">
+    <div class="modal-box">
+        <h3 style="margin-top:0;">Edit User Details</h3>
+        <form method="POST">
+            <input type="hidden" name="action" value="edit_user">
+            <input type="hidden" id="edit_user_id" name="user_id">
+            
+            <div class="form-group">
+                <label style="font-weight:600; font-size:0.9rem;">Username</label>
+                <input type="text" id="edit_username" name="username" required>
+            </div>
+            
+            <div class="form-group">
+                <label style="font-weight:600; font-size:0.9rem;">Email Address</label>
+                <input type="email" id="edit_email" name="email" required>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button type="submit" class="btn-gradient" style="flex:1;">Save Changes</button>
+                <button type="button" class="btn-gradient" onclick="closeEditModal()" style="flex:1; background:transparent; border:1px solid var(--text-sub); color:var(--text-main); box-shadow:none;">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openEditModal(id, username, email) {
+        document.getElementById('edit_user_id').value = id;
+        document.getElementById('edit_username').value = username;
+        document.getElementById('edit_email').value = email;
+        document.getElementById('editModal').style.display = 'flex';
+    }
+
+    function closeEditModal() {
+        document.getElementById('editModal').style.display = 'none';
+    }
+</script>
+{% endblock %}

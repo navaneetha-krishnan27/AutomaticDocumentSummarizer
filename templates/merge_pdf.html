@@ -1,0 +1,421 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* --- THEME VARIABLES --- */
+    :root {
+        --upload-area-bg: rgba(16, 185, 129, 0.05);
+        --upload-border: #10b981;
+    }
+
+    body.dark-mode {
+        --upload-area-bg: rgba(16, 185, 129, 0.1);
+    }
+
+    .merge-container {
+        max-width: 1000px; /* ADJUSTED: Balanced Width */
+        margin: 40px auto;
+        padding: 40px;     /* ADJUSTED: Standard Padding */
+        background: var(--card-bg);
+        border-radius: 20px;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--card-border);
+        color: var(--text-main);
+        transition: max-width 0.3s ease;
+    }
+
+    /* Info & Limitations Box */
+    .info-box {
+        background: var(--input-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
+        padding: 15px 20px;
+        margin-bottom: 30px;
+        font-size: 0.95rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .badge-offline {
+        background: rgba(16, 185, 129, 0.15);
+        color: #10b981;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-weight: 700;
+        font-size: 0.85rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .limit-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        display: flex;
+        gap: 20px;
+        color: var(--text-sub);
+        font-size: 0.9rem;
+        flex-wrap: wrap;
+    }
+    .limit-list li { display: flex; align-items: center; gap: 6px; }
+    .limit-list li::before { content: "•"; color: var(--text-sub); font-weight: bold; }
+
+    /* Upload Area */
+    .upload-area {
+        border: 2px dashed var(--card-border);
+        border-radius: 16px;
+        padding: 50px; /* ADJUSTED */
+        text-align: center;
+        background: var(--upload-area-bg);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-bottom: 25px;
+    }
+    .upload-area:hover {
+        border-color: var(--upload-border);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+    }
+
+    /* Active File List Area */
+    #active-area { display: none; }
+
+    .file-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 25px;
+        max-height: 500px; /* ADJUSTED Height */
+        overflow-y: auto;
+        padding-right: 5px;
+    }
+
+    .file-item {
+        display: flex;
+        align-items: center;
+        background: var(--input-bg);
+        border: 1px solid var(--card-border);
+        padding: 15px 20px;
+        border-radius: 12px;
+        position: relative;
+        transition: all 0.2s;
+        animation: slideIn 0.3s ease;
+    }
+
+    .file-icon { font-size: 1.8rem; margin-right: 15px; color: var(--upload-border); }
+    .file-info { flex: 1; margin-right: 45px; }
+    
+    .file-name { 
+        font-weight: 600; 
+        color: var(--text-main); 
+        display: block; 
+        margin-bottom: 3px;
+        font-size: 1rem;
+    }
+    .file-size { font-size: 0.85rem; color: var(--text-sub); }
+
+    /* Buttons */
+    .remove-btn {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+        border: none;
+        border-radius: 8px;
+        width: 36px;
+        height: 36px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        transition: all 0.2s;
+    }
+    .remove-btn:hover { background: var(--danger); color: white; }
+
+    .add-more-btn {
+        background: transparent;
+        border: 2px dashed var(--card-border);
+        color: var(--text-sub);
+        width: 100%;
+        padding: 15px;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        transition: all 0.2s;
+        margin-bottom: 25px;
+    }
+    .add-more-btn:hover { border-color: var(--upload-border); color: var(--upload-border); background: var(--upload-area-bg); }
+
+    .btn-action {
+        width: 100%;
+        padding: 18px;
+        border: none;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        font-size: 1.1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s;
+        box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+    }
+    .btn-action:hover { transform: translateY(-2px); }
+    .btn-action:disabled { background: #9ca3af; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* --- STATUS MESSAGE STYLES --- */
+    #status-container {
+        margin-top: 20px;
+        text-align: center;
+        display: none; 
+        padding: 15px;
+        border-radius: 12px;
+        font-size: 1rem;
+    }
+    
+    .status-loading {
+        background: rgba(37, 99, 235, 0.1);
+        color: var(--primary);
+        border: 1px solid var(--primary);
+    }
+    
+    .status-success {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+        border: 1px solid #10b981;
+    }
+
+    .spinner {
+        display: inline-block;
+        width: 22px;
+        height: 22px;
+        border: 3px solid rgba(37, 99, 235, 0.3);
+        border-radius: 50%;
+        border-top-color: var(--primary);
+        animation: spin 1s ease-in-out infinite;
+        margin-right: 10px;
+        vertical-align: middle;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+
+<div class="merge-container">
+    <div style="text-align: center; margin-bottom: 30px;">
+        <h2 style="font-size: 2.2rem; margin-bottom: 10px;">🔗 Merge PDFs</h2>
+        <p style="color: var(--text-sub); font-size: 1.1rem;">Select files, arrange order, and merge instantly.</p>
+    </div>
+
+    <div class="info-box">
+        <div class="badge-offline">⚡ 100% Free & Offline</div>
+        <ul class="limit-list">
+            <li>Max <strong>30 Files</strong></li>
+            <li>Max <strong>200MB Total</strong></li>
+            <li>No Encrypted Files</li>
+        </ul>
+    </div>
+
+    <form id="mergeForm">
+        <input type="file" id="fileInput" name="files" accept=".pdf" multiple style="display: none;" onchange="addFiles(this)">
+
+        <div id="initial-upload" class="upload-area" onclick="triggerUpload()">
+            <p style="font-size: 3.5rem; margin: 0 0 15px 0;">📂</p>
+            <p style="font-size: 1.3rem; font-weight: 600; margin: 0; color: var(--text-main);">Click to select PDF files</p>
+            <p style="color: var(--text-sub); font-size: 1rem; margin-top: 8px;">(Drag & drop supported)</p>
+        </div>
+
+        <div id="active-area">
+            <div id="file-list" class="file-list"></div>
+
+            <div style="display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 0.95rem; color: var(--text-sub); padding: 0 5px;">
+                <span id="file-count">0 files</span>
+                <span id="total-size">0 MB / 200 MB</span>
+            </div>
+
+            <button type="button" class="add-more-btn" onclick="triggerUpload()">
+                <span style="font-size: 22px;">+</span> Add more PDF files
+            </button>
+
+            <button type="submit" id="submitBtn" class="btn-action">Merge Files Now</button>
+            
+            <div id="status-container"></div>
+        </div>
+    </form>
+</div>
+
+<script>
+    let allFiles = []; 
+    const MAX_FILES = 30;
+    const MAX_SIZE_MB = 200;
+
+    function triggerUpload() {
+        document.getElementById('fileInput').click();
+    }
+
+    function addFiles(input) {
+        // --- ADDED: Hide status when adding files ---
+        document.getElementById('status-container').style.display = 'none';
+
+        if (input.files && input.files.length > 0) {
+            Array.from(input.files).forEach(file => {
+                // Deduplicate check
+                if (!allFiles.some(f => f.name === file.name && f.size === file.size)) {
+                    allFiles.push(file);
+                }
+            });
+            renderList();
+        }
+        input.value = ''; 
+    }
+
+    function removeFile(index) {
+        // --- ADDED: Hide status when changing file list ---
+        document.getElementById('status-container').style.display = 'none';
+
+        allFiles.splice(index, 1);
+        renderList();
+    }
+
+    function renderList() {
+        const initial = document.getElementById('initial-upload');
+        const active = document.getElementById('active-area');
+        const list = document.getElementById('file-list');
+        const countLabel = document.getElementById('file-count');
+        const sizeLabel = document.getElementById('total-size');
+        const submitBtn = document.getElementById('submitBtn');
+
+        list.innerHTML = ''; 
+
+        if (allFiles.length > 0) {
+            initial.style.display = 'none';
+            active.style.display = 'block';
+
+            let totalSize = 0;
+
+            allFiles.forEach((file, index) => {
+                totalSize += file.size;
+                const item = document.createElement('div');
+                item.className = 'file-item';
+                
+                let sizeStr = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+
+                item.innerHTML = `
+                    <div class="file-icon">📄</div>
+                    <div class="file-info">
+                        <span class="file-name">${index + 1}. ${file.name}</span>
+                        <span class="file-size">${sizeStr}</span>
+                    </div>
+                    <button type="button" class="remove-btn" onclick="removeFile(${index})" title="Remove">✕</button>
+                `;
+                list.appendChild(item);
+            });
+
+            // Update Stats
+            let totalMB = (totalSize / 1024 / 1024).toFixed(2);
+            countLabel.innerText = `${allFiles.length} files`;
+            sizeLabel.innerText = `${totalMB} MB / ${MAX_SIZE_MB} MB`;
+
+            // Validate Limits
+            if (allFiles.length > MAX_FILES || totalMB > MAX_SIZE_MB) {
+                submitBtn.disabled = true;
+                submitBtn.innerText = "Limit Exceeded (Reduce Files)";
+                submitBtn.style.background = "#9ca3af"; 
+                sizeLabel.style.color = "#ef4444";
+                sizeLabel.style.fontWeight = "bold";
+            } else {
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Merge Files Now";
+                submitBtn.style.background = ""; 
+                sizeLabel.style.color = "";
+                sizeLabel.style.fontWeight = "normal";
+            }
+
+        } else {
+            initial.style.display = 'block';
+            active.style.display = 'none';
+        }
+    }
+
+    // --- HANDLE SUBMISSION WITH FEEDBACK ---
+    document.getElementById('mergeForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        if (allFiles.length < 2) {
+            alert("Please select at least 2 PDF files to merge.");
+            return;
+        }
+
+        const submitBtn = document.getElementById('submitBtn');
+        const statusDiv = document.getElementById('status-container');
+
+        // 1. Show Loading State
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Processing...";
+        statusDiv.style.display = 'block';
+        statusDiv.className = 'status-loading';
+        statusDiv.innerHTML = `<div class="spinner"></div> Merging your files... please wait.`;
+
+        // 2. Prepare Data
+        const formData = new FormData();
+        allFiles.forEach(file => formData.append('files', file));
+
+        try {
+            // 3. Send Request
+            const response = await fetch("{{ url_for('merge_pdf_tool') }}", {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                // 4. Handle Success (Download File)
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                
+                // Try to get filename from header, else default
+                const contentDisp = response.headers.get('Content-Disposition');
+                let filename = 'Merged_Document.pdf';
+                if (contentDisp && contentDisp.indexOf('filename=') !== -1) {
+                    filename = contentDisp.split('filename=')[1].replace(/"/g, '');
+                }
+                
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+
+                // 5. Show Completion Message
+                statusDiv.className = 'status-success';
+                statusDiv.innerHTML = `<strong>Success!</strong> Your merged PDF has been downloaded.`;
+                submitBtn.innerText = "Merge Files Now";
+                submitBtn.disabled = false;
+
+            } else {
+                throw new Error("Server returned an error.");
+            }
+
+        } catch (error) {
+            console.error(error);
+            statusDiv.style.display = 'block';
+            statusDiv.style.color = 'var(--danger)';
+            statusDiv.style.background = 'rgba(239, 68, 68, 0.1)';
+            statusDiv.innerHTML = `<strong>Error:</strong> Failed to merge files. Please try again with fewer files.`;
+            submitBtn.innerText = "Try Again";
+            submitBtn.disabled = false;
+        }
+    });
+</script>
+{% endblock %}

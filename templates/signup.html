@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="glass-card" style="max-width: 400px; margin: 40px auto;">
+    <h2 style="text-align: center; color: var(--text-main); margin-bottom: 30px;">Create Account</h2>
+    
+    <form method="POST">
+        <div class="form-group">
+            <input type="text" name="username" placeholder="Username" required>
+        </div>
+        <div class="form-group">
+            <input type="email" name="email" placeholder="Email Address" required>
+        </div>
+        <div class="form-group">
+            <label style="font-size: 0.85rem; color: var(--text-sub); margin-bottom: 5px; display:block;">Date of Birth</label>
+            <input type="date" name="dob" required>
+        </div>
+        <div class="form-group">
+            <input type="password" name="password" placeholder="Password (Min 8 chars)" required>
+        </div>
+        <button class="btn-gradient" type="submit" style="width: 100%;">Sign Up</button>
+    </form>
+    <p style="text-align: center; margin-top: 20px; font-size: 0.9rem;">
+        Already joined? <a href="{{ url_for('login') }}" style="color: var(--primary); font-weight: bold;">Login here</a>
+    </p>
+</div>
+{% endblock %}

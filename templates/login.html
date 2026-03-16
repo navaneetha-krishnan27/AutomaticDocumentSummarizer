@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="glass-card" style="max-width: 400px; margin: 40px auto; padding: 40px;">
+    <h2 style="text-align: center; color: var(--text-main); margin-bottom: 30px;">Welcome Back</h2>
+    
+    <form method="POST">
+        <div class="form-group">
+            <input type="text" name="login_id" placeholder="Username or Email" required>
+        </div>
+        <div class="form-group">
+            <input type="password" name="password" placeholder="Password" required>
+        </div>
+        <div style="text-align: right; margin-bottom: 20px;">
+            <a href="{{ url_for('forgot_password') }}" style="font-size: 0.85rem; color: var(--primary);">Forgot Password?</a>
+        </div>
+        <button class="btn-gradient" type="submit" style="width: 100%;">Login</button>
+    </form>
+
+    <p style="text-align: center; margin-top: 20px; font-size: 0.9rem;">
+        No account? <a href="{{ url_for('signup') }}" style="color: var(--primary); font-weight: bold;">Sign up</a>
+    </p>
+</div>
+{% endblock %}

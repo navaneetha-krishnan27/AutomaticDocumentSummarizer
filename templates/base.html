@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Summarizer - Smart Document Insights</title>
+    <style>
+        /* --- 1. GLOBAL VARIABLES & THEME --- */
+        :root {
+            --bg-body: #f0f4f8;
+            --text-main: #0f172a;
+            --text-sub: #334155;
+            --primary: #2563eb;
+            --accent: #3b82f6;
+            
+            /* GLASS VARIABLES (Light Mode) */
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --card-border: rgba(255, 255, 255, 0.4);
+            --card-hover: rgba(255, 255, 255, 0.95);
+            --input-bg: rgba(255, 255, 255, 0.5);
+            
+            /* DROPDOWN (Solid/Opaque) */
+            --dropdown-bg: #ffffff;
+            
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+            --shadow-hover: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            --gradient: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+            --nav-glass: rgba(255, 255, 255, 0.85);
+            --danger: #ef4444;
+            --success: #22c55e;
+            --warning: #f59e0b;
+        }
+
+        body.dark-mode {
+            --bg-body: #0f172a;
+            --text-main: #f8fafc;
+            --text-sub: #cbd5e1;
+            
+            /* GLASS VARIABLES (Dark Mode) */
+            --card-bg: rgba(30, 41, 59, 0.9);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --card-hover: rgba(30, 41, 59, 0.95);
+            --input-bg: rgba(15, 23, 42, 0.5);
+            
+            /* DROPDOWN (Solid/Opaque) */
+            --dropdown-bg: #1e293b;
+            
+            --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            --shadow-hover: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            --nav-glass: rgba(15, 23, 42, 0.85);
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            transition: background 0.3s ease, color 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* --- AMBIENT BACKGROUND ORBS --- */
+        body::before, body::after {
+            content: '';
+            position: fixed;
+            z-index: -1;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.6;
+            animation: floatOrb 10s infinite alternate;
+        }
+        
+        body::before {
+            top: -100px;
+            left: -100px;
+            width: 500px;
+            height: 500px;
+            background: rgba(37, 99, 235, 0.3);
+        }
+        
+        body::after {
+            bottom: -100px;
+            right: -100px;
+            width: 500px;
+            height: 500px;
+            background: rgba(124, 58, 237, 0.3);
+            animation-delay: -5s;
+        }
+
+        @keyframes floatOrb {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(30px, 50px); }
+        }
+
+        .no-transition { transition: none !important; }
+
+        /* --- 2. NAVBAR --- */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 5%;
+            background: var(--nav-glass);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+
+        .nav-links { display: flex; align-items: center; gap: 20px; }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+        .nav-link:hover { color: var(--primary); }
+
+        /* --- DROPDOWN (SOLID BACKGROUND) --- */
+        .dropdown { position: relative; display: inline-block; height: 100%; }
+        
+        .dropbtn {
+            background: none; border: none; font-family: inherit; cursor: pointer;
+            text-decoration: none; color: var(--text-main); font-weight: 600;
+            font-size: 0.95rem; transition: color 0.2s; padding: 10px 0;
+            display: flex; align-items: center; gap: 4px;
+        }
+        .dropbtn:hover { color: var(--primary); }
+        
+        .dropdown-content {
+            display: none; position: absolute; top: 100%; left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--dropdown-bg);
+            min-width: 190px;
+            box-shadow: var(--shadow-hover);
+            border-radius: 12px;
+            border: 1px solid var(--card-border);
+            z-index: 1001; padding: 8px 0; margin-top: 10px;
+        }
+        
+        .dropdown-content::after { content: ""; position: absolute; bottom: 100%; left: 0; width: 100%; height: 20px; background: transparent; }
+        .dropdown-content::before {
+            content: ""; position: absolute; bottom: 100%; left: 50%; margin-left: -6px;
+            border-width: 6px; border-style: solid;
+            border-color: transparent transparent var(--card-border) transparent; pointer-events: none;
+        }
+        .dropdown-content a {
+            color: var(--text-main); padding: 12px 20px; text-decoration: none;
+            display: block; font-size: 0.9rem; transition: all 0.2s; font-weight: 500;
+        }
+        .dropdown-content a:hover { background-color: var(--card-border); color: var(--primary); padding-left: 25px; }
+        .dropdown:hover .dropdown-content { display: block; animation: fadeInDrop 0.2s ease-out; }
+        
+        @keyframes fadeInDrop { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+        /* Controls */
+        .icon-btn {
+            background: var(--input-bg);
+            border: 1px solid var(--card-border);
+            cursor: pointer; font-size: 1rem; padding: 5px 10px;
+            border-radius: 8px; transition: all 0.2s ease;
+            color: var(--text-main); display: flex; align-items: center; justify-content: center;
+        }
+        .icon-btn:hover { background: var(--card-hover); }
+
+        .btn-gradient {
+            background: var(--gradient); color: white !important;
+            padding: 10px 20px; border-radius: 50px; text-decoration: none;
+            font-weight: 600; font-size: 0.9rem; border: none; cursor: pointer;
+            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
+            transition: transform 0.2s, box-shadow 0.2s; display: inline-block;
+        }
+        .btn-gradient:hover { transform: translateY(-2px); box-shadow: 0 8px 15px rgba(37, 99, 235, 0.3); }
+
+        /* --- 3. GLASS CARD & COMMON LAYOUTS --- */
+        .main-container {
+            flex: 1; padding: 40px 20px; max-width: 1200px;
+            margin: 0 auto; width: 100%; box-sizing: border-box;
+        }
+
+        .glass-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px; padding: 40px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            transition: all 0.3s ease;
+        }
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--card-border);
+            background: var(--card-hover);
+        }
+
+        .form-group { margin-bottom: 20px; }
+        
+        input, select, textarea {
+            width: 100%; padding: 12px; border-radius: 10px;
+            border: 1px solid var(--card-border);
+            background: var(--input-bg);
+            color: var(--text-main); font-family: inherit;
+            box-sizing: border-box; transition: border 0.2s, box-shadow 0.2s;
+            backdrop-filter: blur(4px);
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none; border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .alert {
+            padding: 15px; border-radius: 10px; margin-bottom: 20px;
+            background: rgba(239, 68, 68, 0.15); color: var(--danger);
+            border: 1px solid var(--danger); text-align: center; font-weight: 500;
+            backdrop-filter: blur(8px);
+        }
+
+        footer {
+            text-align: center; padding: 30px; color: var(--text-sub);
+            font-size: 0.9rem; margin-top: auto; font-weight: 500;
+        }
+
+        /* --- 4. SMART RATING WIDGET --- */
+        #ratingWidget {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 300px; /* Reduced Width */
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            box-shadow: var(--shadow-hover);
+            border-radius: 16px;
+            padding: 20px;
+            z-index: 2000;
+            display: none; /* Hidden by default */
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .rating-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;
+        }
+        .rating-title { font-weight: 700; color: var(--text-main); font-size: 1rem; }
+        .rating-close { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-sub); }
+        
+        .stars { display: flex; justify-content: center; gap: 8px; margin: 15px 0; }
+        .star { font-size: 1.8rem; cursor: pointer; color: var(--text-sub); transition: color 0.2s; }
+        .star.hovered, .star.selected { color: #fbbf24; } /* Amber-400 */
+
+        .rating-btn {
+            width: 100%; padding: 10px; border-radius: 8px; border: none;
+            background: var(--gradient); color: white; font-weight: 600;
+            cursor: pointer; margin-top: 10px;
+        }
+        .rating-btn:hover { filter: brightness(1.1); }
+
+        /* --- 5. BROADCAST POPUP MODAL (FIXED SIZE) --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6); z-index: 9999;
+            display: flex; 
+            justify-content: center; 
+            align-items: center; /* This centers it vertically */
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+            backdrop-filter: blur(4px);
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        
+        .modal-content {
+            background: #ffffff; /* Use solid white for clarity */
+            border: 1px solid var(--card-border);
+            padding: 30px; 
+            border-radius: 16px;
+            max-width: 400px; /* Force max width */
+            width: 85%;
+            height: auto; /* IMPORTANT: Prevents stretching */
+            max-height: 80vh; /* Prevents touching top/bottom */
+            position: relative; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            text-align: center;
+            transform: scale(0.95); transition: transform 0.3s ease;
+            display: flex; flex-direction: column; /* Organize content */
+        }
+        /* Dark mode support for modal */
+        body.dark-mode .modal-content { background: #1e293b; color: #f8fafc; }
+
+        .modal-overlay.active .modal-content { transform: scale(1); }
+
+        /* Styled Close Button */
+        .modal-close {
+            position: absolute; 
+            top: 10px; right: 10px;
+            background: rgba(239, 68, 68, 0.1); 
+            border: none; 
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            font-size: 1.2rem; font-weight: bold;
+            cursor: pointer; 
+            color: #ef4444; /* Red color */
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+            z-index: 10;
+        }
+        .modal-close:hover { background: #ef4444; color: white; transform: rotate(90deg); }
+    </style>
+</head>
+<body class="no-transition">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <nav>
+        <a href="{{ url_for('home') }}" class="logo">✨ AI Summarizer</a>
+        <div class="nav-links">
+            <a href="{{ url_for('home') }}" class="nav-link">Home</a>
+            <div class="dropdown">
+                <button class="dropbtn">Services ▾</button>
+                <div class="dropdown-content">
+                    <a href="{{ url_for('dashboard') }}">📄 Summarizer</a>
+                    <a href="{{ url_for('split_pdf_tool') }}">✂️ Split PDF</a>
+                    <a href="{{ url_for('merge_pdf_tool') }}">🔗 Merge PDF</a>
+                    <a href="{{ url_for('img_to_pdf_tool') }}">🖼️ JPG to PDF</a>
+                </div>
+            </div>
+            {% if current_user.is_authenticated %}
+                {% if current_user.role == 'admin' %}
+                    <a href="{{ url_for('admin_dashboard') }}" class="nav-link" style="color:#22c55e; font-weight:bold;">🛡️ Admin</a>
+                {% endif %}
+                <a href="{{ url_for('dashboard') }}" class="nav-link">Dashboard</a>
+                <a href="{{ url_for('history') }}" class="nav-link">History</a>
+                <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
+                <a href="{{ url_for('logout') }}" class="btn-gradient" style="padding: 8px 15px; font-size: 0.85rem;">Logout</a>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="nav-link">Login</a>
+                <a href="{{ url_for('signup') }}" class="btn-gradient">Sign Up</a>
+            {% endif %}
+            <button class="icon-btn" onclick="adjustZoom(0.1)" title="Zoom In">➕</button>
+            <button class="icon-btn" onclick="adjustZoom(-0.1)" title="Zoom Out">➖</button>
+            <button class="icon-btn" id="themeToggle" title="Toggle Theme"><span id="themeIcon">☀️</span></button>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="alert">{{ messages[0] }}</div>
+            {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </div>
+
+    {% if current_user.is_authenticated and active_announcement %}
+    <div id="announcementModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeAnnouncement()" title="Close Notification">✕</button>
+            <h3 style="margin-top:0; margin-bottom: 15px; color:var(--primary); font-size: 1.3rem;">📢 Notice</h3>
+            <p style="font-size: 1rem; margin-bottom: 0; line-height: 1.6; color: var(--text-main);">
+                {{ active_announcement }}
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if current_user.is_authenticated and rating_enabled and not user_has_rated %}
+    <div id="ratingWidget">
+        <div class="rating-header">
+            <span class="rating-title">Rate Us</span>
+            <button class="rating-close" onclick="hideRating()">×</button>
+        </div>
+        <p style="font-size: 0.9rem; color: var(--text-sub); margin: 0; text-align: center;">How is your experience?</p>
+        
+        <div class="stars" id="starContainer">
+            <span class="star" data-value="1">★</span>
+            <span class="star" data-value="2">★</span>
+            <span class="star" data-value="3">★</span>
+            <span class="star" data-value="4">★</span>
+            <span class="star" data-value="5">★</span>
+        </div>
+        
+        <button class="rating-btn" onclick="submitRating()">Submit</button>
+    </div>
+    {% endif %}
+
+    <footer>&copy; 2026 AI Summarizer. Crafted with intelligence.</footer>
+
+    <script>
+        const toggleBtn = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const body = document.body;
+
+        // --- AUTH & USER DATA ---
+        const isUserAuthenticated = "{{ current_user.is_authenticated }}" === "True";
+        const currentUsername = "{{ current_user.username if current_user.is_authenticated else '' }}";
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (body.classList.contains('dark-mode')) {
+                themeIcon.textContent = '🌙';
+            }
+            setTimeout(() => { body.classList.remove('no-transition'); }, 100);
+            
+            // --- CHECK RATING LOGIC ---
+            // We check sessionStorage for TEMPORARY dismissal (X button) during this browser session.
+            if (document.getElementById('ratingWidget')) {
+                const sessionDismissed = sessionStorage.getItem('rating_dismissed_session');
+                
+                if (!sessionDismissed) {
+                    setTimeout(() => {
+                        const widget = document.getElementById('ratingWidget');
+                        if (widget) {
+                            widget.style.display = 'block';
+                            widget.style.opacity = '1';
+                        }
+                    }, 1000); 
+                }
+            }
+
+            // --- CHECK ANNOUNCEMENT POPUP ---
+            if (document.getElementById('announcementModal')) {
+                const modal = document.getElementById('announcementModal');
+                const announcementText = document.querySelector('#announcementModal p').innerText;
+                const noteKey = `seen_notice_${currentUsername}`; 
+                const seenText = localStorage.getItem(noteKey);
+                
+                if (seenText !== announcementText) {
+                    modal.classList.add('active');
+                }
+            }
+        });
+
+        function closeAnnouncement() {
+            const modal = document.getElementById('announcementModal');
+            if (modal) {
+                modal.classList.remove('active');
+                const announcementText = document.querySelector('#announcementModal p').innerText;
+                const noteKey = `seen_notice_${currentUsername}`;
+                localStorage.setItem(noteKey, announcementText);
+            }
+        }
+
+        function hideRating() {
+            const widget = document.getElementById('ratingWidget');
+            if (widget) widget.style.display = 'none';
+            // Set session flag so it doesn't pop up on every page refresh in this session
+            sessionStorage.setItem('rating_dismissed_session', 'true');
+        }
+
+        // Star Interaction
+        const stars = document.querySelectorAll('.star');
+        let selectedRating = 0;
+        
+        stars.forEach(star => {
+            star.addEventListener('click', function() {
+                selectedRating = this.getAttribute('data-value');
+                highlightStars(selectedRating);
+            });
+            
+            star.addEventListener('mouseover', function() {
+                highlightStars(this.getAttribute('data-value'));
+            });
+            
+            star.addEventListener('mouseout', function() {
+                highlightStars(selectedRating);
+            });
+        });
+
+        function highlightStars(count) {
+            stars.forEach(s => {
+                if (s.getAttribute('data-value') <= count) {
+                    s.classList.add('selected');
+                } else {
+                    s.classList.remove('selected');
+                }
+            });
+        }
+
+        function submitRating() {
+            if (selectedRating === 0) {
+                alert("Please select a star rating first.");
+                return;
+            }
+
+            fetch('/submit_rating_api', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rating: selectedRating })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert("Thank you for your feedback!");
+                    // Hide immediately. 
+                    // On next page reload, server will see user_has_rated=True and not render it.
+                    hideRating();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                hideRating();
+            });
+        }
+
+        toggleBtn.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+            if (body.classList.contains('dark-mode')) {
+                themeIcon.textContent = '🌙';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                themeIcon.textContent = '☀️';
+                localStorage.setItem('theme', 'light');
+            }
+        });
+
+        let currentZoom = 1;
+        function adjustZoom(amount) {
+            currentZoom += amount;
+            if (currentZoom < 0.5) currentZoom = 0.5;
+            if (currentZoom > 2.0) currentZoom = 2.0;
+            document.body.style.zoom = currentZoom;
+        }
+    </script>
+</body>
+</html>
