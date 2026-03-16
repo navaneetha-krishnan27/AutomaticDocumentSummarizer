@@ -66,7 +66,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secure-key-123'
 
 # --- DATABASE CONFIG ---
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:shree-krishna@localhost/nlp_fresh_db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:password@local/nlp_fresh_db'
 app.config['UPLOAD_FOLDER'] = 'uploads'
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
