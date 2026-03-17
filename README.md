@@ -144,6 +144,7 @@ Bash
 python app.py
 Access the application at http://127.0.0.1:5000/.
 
+---
 📂 Project Structure
 Plaintext
 ai-document-summarizer/
@@ -166,6 +167,9 @@ ai-document-summarizer/
 │
 ├── uploads/                # Temporary storage for user files
 └── local_ml_model/         # Cached sentence-transformers model files
+
+---
+
 📖 Usage Guide
 Create an Account: Register a new user profile to access the dashboard.
 
