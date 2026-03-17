@@ -168,7 +168,6 @@ ai-document-summarizer/
 ├── uploads/                # Temporary storage for user files
 └── local_ml_model/         # Cached sentence-transformers model files
 
----
 
 📖 Usage Guide
 Create an Account: Register a new user profile to access the dashboard.
